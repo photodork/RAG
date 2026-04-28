@@ -1,0 +1,10 @@
+streamlit
+langchain-community
+langchain-core
+langchain-text-splitters
+pypdf
+chromadb
+rank_bm25
+ragas
+datasets
+pandas
