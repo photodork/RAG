@@ -10,7 +10,8 @@ from ragas.metrics import faithfulness, answer_relevancy
 from datasets import Dataset
 from ragas.run_config import RunConfig
 import os
-
+from ragas.llms import LangchainLLMWrapper
+from ragas.embeddings import LangchainEmbeddingsWrapper
 # -------------------------------
 # Initialize models
 # -------------------------------
@@ -172,18 +173,22 @@ def evaluate_response(question: str, answer: str, contexts: list):
     }
     dataset = Dataset.from_dict(data)
 
-    # ADDED: Configuration to stop local Ollama from timing out
+    # Configuration to stop local Ollama from timing out
     run_config = RunConfig(
-        timeout=300,      # Increase timeout to 5 minutes per request
-        max_workers=1     # Force synchronous execution (1 request at a time)
+        timeout=300,
+        max_workers=1
     )
+
+    # Wrap your LangChain local models so Ragas understands them
+    ragas_llm = LangchainLLMWrapper(eval_llm)
+    ragas_embeddings = LangchainEmbeddingsWrapper(embeddings)
 
     result = evaluate(
         dataset=dataset,
         metrics=[faithfulness, answer_relevancy],
-        llm=eval_llm,           # Use the strict JSON-enforced LLM
-        embeddings=embeddings,
-        run_config=run_config,  # Apply the anti-timeout config
+        llm=ragas_llm,                  # Use the wrapped LLM
+        embeddings=ragas_embeddings,    # Use the wrapped Embeddings
+        run_config=run_config,
         raise_exceptions=False
     )
 
